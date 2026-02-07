@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Multi-Region Description Consistency Checker",
+  "version": "1.0.0",
+  "description": "Detects ASINs on Amazon pages and checks product description consistency across regions (US, IN, DE)",
+  "permissions": [],
+  "host_permissions": [
+    "http://localhost:5000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "Multi-Region Description Checker"
+  }
+}
