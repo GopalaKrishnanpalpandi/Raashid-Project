@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Region Checker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            width: 360px;
+            min-height: 200px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #FFFFFF;
+            color: #0F1111;
+        }
+
+        .popup-header {
+            background: linear-gradient(135deg, #232F3E, #37475A);
+            padding: 16px 20px;
+            color: #FFFFFF;
+        }
+
+        .popup-header h1 {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .popup-header h1 .logo-icon {
+            font-size: 20px;
+        }
+
+        .popup-header p {
+            font-size: 11px;
+            color: #A0B0C0;
+            margin-top: 4px;
+        }
+
+        .popup-body {
+            padding: 16px 20px;
+        }
+
+        /* Search Section */
+        .search-section {
+            margin-bottom: 16px;
+        }
+
+        .search-section label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #565959;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-row input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #D5D9D9;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: monospace;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .search-row input:focus {
+            border-color: #007185;
+            box-shadow: 0 0 0 2px rgba(0,113,133,0.15);
+        }
+
+        .search-row input::placeholder {
+            color: #AAA;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .btn-check {
+            padding: 8px 16px;
+            background: #FFD814;
+            border: 1px solid #FCD200;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0F1111;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+
+        .btn-check:hover {
+            background: #F7CA00;
+        }
+
+        .btn-check:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Status */
+        .status-section {
+            margin-bottom: 16px;
+        }
+
+        .status-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid #E0E0E0;
+            background: #FAFAFA;
+        }
+
+        .status-card.risk-low {
+            border-color: #A8DAB5;
+            background: #E6F4EA;
+        }
+
+        .status-card.risk-medium {
+            border-color: #FFE082;
+            background: #FFF8E1;
+        }
+
+        .status-card.risk-high {
+            border-color: #EF9A9A;
+            background: #FDECEA;
+        }
+
+        .status-icon {
+            font-size: 28px;
+        }
+
+        .status-info {
+            flex: 1;
+        }
+
+        .status-info .risk-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-info .risk-label.low { color: #137333; }
+        .status-info .risk-label.medium { color: #856404; }
+        .status-info .risk-label.high { color: #C62828; }
+
+        .status-info .asin-text {
+            font-size: 11px;
+            color: #565959;
+            margin-top: 2px;
+        }
+
+        .status-info .score-text {
+            font-size: 12px;
+            color: #0F1111;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .status-msg {
+            font-size: 13px;
+            color: #565959;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .status-msg.error {
+            color: #C62828;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #D5D9D9;
+            border-top-color: #007185;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* History */
+        .history-section {
+            border-top: 1px solid #E0E0E0;
+            padding-top: 12px;
+        }
+
+        .history-section h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #565959;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .history-section h3 .clear-btn {
+            font-size: 11px;
+            color: #007185;
+            cursor: pointer;
+            font-weight: 400;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .history-section h3 .clear-btn:hover {
+            text-decoration: underline;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 12px;
+        }
+
+        .history-item:hover {
+            background: #F0F0F0;
+        }
+
+        .history-item .h-icon {
+            font-size: 14px;
+        }
+
+        .history-item .h-asin {
+            font-family: monospace;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .history-item .h-risk {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 8px;
+            text-transform: uppercase;
+        }
+
+        .history-item .h-risk.low { background: #E6F4EA; color: #137333; }
+        .history-item .h-risk.medium { background: #FEF3CD; color: #856404; }
+        .history-item .h-risk.high { background: #FDECEA; color: #C62828; }
+
+        .history-item .h-score {
+            color: #565959;
+            margin-left: auto;
+            font-size: 11px;
+        }
+
+        .no-history {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            padding: 12px;
+        }
+
+        /* Regions bar */
+        .regions-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .region-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            background: #F0F2F2;
+            border-radius: 4px;
+            color: #565959;
+        }
+
+        .popup-footer {
+            padding: 10px 20px;
+            border-top: 1px solid #E0E0E0;
+            text-align: center;
+        }
+
+        .popup-footer a {
+            font-size: 11px;
+            color: #007185;
+            text-decoration: none;
+        }
+
+        .popup-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            border-bottom: 2px solid #E0E0E0;
+            margin-bottom: 14px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #565959;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.15s;
+        }
+        .tab-btn.active {
+            color: #007185;
+            border-bottom-color: #007185;
+        }
+        .tab-btn:hover { color: #007185; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* Bulk Check */
+        .bulk-section label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #565959;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .bulk-textarea {
+            width: 100%;
+            min-height: 70px;
+            padding: 8px 10px;
+            border: 1px solid #D5D9D9;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: monospace;
+            resize: vertical;
+            outline: none;
+        }
+        .bulk-textarea:focus {
+            border-color: #007185;
+            box-shadow: 0 0 0 2px rgba(0,113,133,0.15);
+        }
+        .bulk-hint {
+            font-size: 10px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .bulk-actions {
+            display: flex; gap: 8px; margin-top: 10px;
+        }
+        .btn-bulk {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid;
+            transition: background 0.15s;
+        }
+        .btn-bulk.primary {
+            background: #FFD814; border-color: #FCD200; color: #0F1111;
+        }
+        .btn-bulk.primary:hover { background: #F7CA00; }
+        .btn-bulk.secondary {
+            background: #FFF; border-color: #D5D9D9; color: #0F1111;
+        }
+        .btn-bulk.secondary:hover { background: #F7FAFA; }
+        .btn-bulk:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Bulk results table */
+        .bulk-results {
+            margin-top: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .bulk-results table {
+            width: 100%;
+            font-size: 11px;
+            border-collapse: collapse;
+        }
+        .bulk-results th {
+            text-align: left;
+            padding: 4px 6px;
+            background: #F0F2F2;
+            font-weight: 600;
+            color: #565959;
+            position: sticky; top: 0;
+        }
+        .bulk-results td {
+            padding: 5px 6px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .bulk-results .b-risk {
+            font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 6px;
+        }
+        .bulk-results .b-risk.low { background: #E6F4EA; color: #137333; }
+        .bulk-results .b-risk.medium { background: #FEF3CD; color: #856404; }
+        .bulk-results .b-risk.high { background: #FDECEA; color: #C62828; }
+
+        /* Scrape toggle */
+        .option-row {
+            display: flex; align-items: center; gap: 6px;
+            margin-top: 8px; font-size: 11px; color: #565959;
+        }
+        .option-row input[type=checkbox] {
+            accent-color: #007185;
+        }
+    </style>
+</head>
+<body>
+    <div class="popup-header">
+        <h1><span class="logo-icon">🔍</span> Multi-Region Checker</h1>
+        <p>Product description consistency across 9 Amazon regions</p>
+    </div>
+
+    <div class="popup-body">
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="single">Single Check</button>
+            <button class="tab-btn" data-tab="bulk">Bulk Check</button>
+        </div>
+
+        <!-- Single Check Tab -->
+        <div class="tab-pane active" id="tab-single">
+            <div class="search-section">
+                <label for="asinInput">Enter ASIN to Check</label>
+                <div class="search-row">
+                    <input type="text" id="asinInput" placeholder="e.g. B08N5WRWNW" maxlength="10">
+                    <button class="btn-check" id="checkBtn">Check</button>
+                </div>
+                <div class="option-row">
+                    <input type="checkbox" id="scrapeToggle">
+                    <label for="scrapeToggle">Live scrape Amazon (slower, real data)</label>
+                </div>
+                <div class="regions-bar">
+                    <span class="region-tag">🇺🇸 US</span>
+                    <span class="region-tag">🇮🇳 IN</span>
+                    <span class="region-tag">🇩🇪 DE</span>
+                    <span class="region-tag">🇬🇧 UK</span>
+                    <span class="region-tag">🇯🇵 JP</span>
+                    <span class="region-tag">🇫🇷 FR</span>
+                    <span class="region-tag">🇨🇦 CA</span>
+                    <span class="region-tag">🇦🇺 AU</span>
+                    <span class="region-tag">🇪🇸 ES</span>
+                </div>
+            </div>
+
+            <div id="statusSection" class="status-section" style="display:none;"></div>
+        </div>
+
+        <!-- Bulk Check Tab -->
+        <div class="tab-pane" id="tab-bulk">
+            <div class="bulk-section">
+                <label for="bulkInput">Enter ASINs (one per line, max 50)</label>
+                <textarea class="bulk-textarea" id="bulkInput" placeholder="B08N5WRWNW&#10;B09V3KXJPB&#10;B07XJ8C8F5"></textarea>
+                <div class="bulk-hint">Paste up to 50 ASINs, one per line</div>
+                <div class="bulk-actions">
+                    <button class="btn-bulk primary" id="bulkCheckBtn">Check All</button>
+                    <button class="btn-bulk secondary" id="bulkExportBtn" disabled>Export CSV</button>
+                </div>
+                <div id="bulkStatus" class="status-section" style="display:none;"></div>
+                <div id="bulkResults" class="bulk-results"></div>
+            </div>
+        </div>
+
+        <div class="history-section" id="historySection"></div>
+    </div>
+
+    <div class="popup-footer">
+        <a href="https://raashid-project-production-55d9.up.railway.app/docs" target="_blank">API Documentation ↗</a>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Multi-Region Description Consistency Checker",
+  "version": "2.0.0",
+  "description": "Checks product description, price, and image consistency across 9 Amazon regions with diff highlighting, bulk check, export, and alerts",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "https://raashid-project-production-55d9.up.railway.app/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.amazon.com/*",
+        "https://www.amazon.in/*",
+        "https://www.amazon.de/*",
+        "https://www.amazon.co.uk/*",
+        "https://www.amazon.co.jp/*",
+        "https://www.amazon.fr/*",
+        "https://www.amazon.ca/*",
+        "https://www.amazon.com.au/*",
+        "https://www.amazon.es/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "Multi-Region Description Checker"
+  }
+}

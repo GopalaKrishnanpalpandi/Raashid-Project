@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Region Description Consistency Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Amazon Ember", Arial, sans-serif;
+            background-color: #EAEDED;
+            color: #0F1111;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #131921;
+            color: #fff;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            color: #FF9900;
+        }
+
+        .header-badge {
+            background: #232f3e;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #fff;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #D5D9D9;
+        }
+
+        .hero h1 {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: #0F1111;
+        }
+
+        .hero p {
+            font-size: 14px;
+            color: #565959;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: #fff;
+            border: 1px solid #D5D9D9;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .search-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #0F1111;
+        }
+
+        .search-section p {
+            color: #565959;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #888C8C;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(15,17,17,.15) inset;
+            color: #0F1111;
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #e77600;
+            box-shadow: 0 0 3px 2px rgba(228,121,17,.5);
+        }
+
+        .search-btn {
+            padding: 8px 20px;
+            background: #FFD814;
+            border-color: #FCD200;
+            border-radius: 20px;
+            border-style: solid;
+            border-width: 1px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px 0 rgba(213,217,217,.5);
+            color: #0F1111;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .search-btn:hover {
+            background: #F7CA00;
+            border-color: #F2C200;
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .search-hint {
+            font-size: 12px;
+            color: #565959;
+        }
+
+        .search-hint code {
+            background: #F0F2F2;
+            color: #0F1111;
+            padding: 2px 6px;
+            border: 1px solid #D5D9D9;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* Result Display */
+        .result-display {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-display.show {
+            display: block;
+        }
+
+        .result-card {
+            background: #fff;
+            border: 1px solid #D5D9D9;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #D5D9D9;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0F1111;
+        }
+
+        .confidence-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .confidence-badge.high { background: #f0f8f0; color: #007600; border: 1px solid #007600; }
+        .confidence-badge.medium { background: #fff4e5; color: #C45500; border: 1px solid #C45500; }
+        .confidence-badge.low { background: #fbe9e7; color: #B12704; border: 1px solid #B12704; }
+
+        /* Risk Banner */
+        .risk-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid;
+        }
+
+        .risk-banner.low { background-color: #f0f8f0; border-color: #007600; }
+        .risk-banner.medium { background-color: #fff4e5; border-color: #C45500; }
+        .risk-banner.high { background-color: #fbe9e7; border-color: #B12704; }
+
+        .risk-banner-left { display: flex; align-items: center; gap: 12px; }
+        
+        .risk-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            color: #fff;
+        }
+        .risk-banner.low .risk-icon { background: #007600; }
+        .risk-banner.medium .risk-icon { background: #C45500; }
+        .risk-banner.high .risk-icon { background: #B12704; }
+
+        .risk-info h3 { font-size: 16px; font-weight: 700; margin: 0; }
+        .risk-banner.low h3 { color: #007600; }
+        .risk-banner.medium h3 { color: #C45500; }
+        .risk-banner.high h3 { color: #B12704; }
+
+        .risk-info p { font-size: 13px; color: #0F1111; margin: 0; }
+
+        .risk-score { text-align: right; }
+        .risk-score-value { font-size: 24px; font-weight: 700; color: #0F1111; }
+        .risk-score-label { font-size: 11px; color: #565959; text-transform: uppercase; }
+
+        /* Title Mismatch Section */
+        .title-mismatch-section {
+            margin-bottom: 20px;
+            border: 1px solid #B12704;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .mismatch-alert-header {
+            background-color: #fbe9e7;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #B12704;
+        }
+
+        .mismatch-alert-header h4 {
+            color: #B12704;
+            font-size: 14px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .mismatch-list {
+            background-color: #fff;
+        }
+
+        .mismatch-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #D5D9D9;
+        }
+
+        .mismatch-item:last-child {
+            border-bottom: none;
+        }
+
+        .mismatch-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .mismatch-score {
+            font-size: 12px;
+            font-weight: 700;
+            color: #B12704;
+            background: #fbe9e7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+
+        .mismatch-titles {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mismatch-title-row {
+            display: flex;
+            gap: 8px;
+            font-size: 13px;
+            align-items: baseline;
+        }
+
+        .region-label {
+            font-weight: 700;
+            color: #565959;
+            min-width: 30px;
+        }
+
+        .title-text {
+            color: #0F1111;
+        }
+
+        /* Diff Styles */
+        .diff-content {
+            margin-top: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .diff-label {
+            font-size: 11px;
+            color: #565959;
+            margin-bottom: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .diff-text span {
+            padding: 2px 0;
+            border-radius: 2px;
+        }
+
+        .diff-insert {
+            background-color: #e6ffec;
+            color: #007600;
+            text-decoration: none;
+            padding: 0 2px !important;
+            border: 1px solid #b7ebc3;
+        }
+
+        .diff-delete {
+            background-color: #ffebe9;
+            color: #cf222e;
+            text-decoration: line-through;
+            padding: 0 2px !important;
+            border: 1px solid #ffc1c0;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            background: #F0F2F2;
+            padding: 16px;
+            border-radius: 4px;
+        }
+
+        .info-card { background: transparent; border: none; padding: 0; }
+        .info-card-label { font-size: 12px; color: #565959; margin-bottom: 4px; }
+        .info-card-value { font-size: 14px; font-weight: 700; color: #0F1111; }
+        .info-card-value.mono { font-family: monospace; }
+
+        /* Comparison Cards */
+        .comparisons-section h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0F1111;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #D5D9D9;
+            padding-bottom: 8px;
+        }
+
+        .comparison-card {
+            border: 1px solid #D5D9D9;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 10px;
+            background: #fff;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .comparison-card:hover { background: #F7FAFA; }
+
+        .comparison-card .expand-icon {
+            font-size: 10px;
+            color: #565959;
+            transition: transform 0.25s;
+            margin-right: 6px;
+        }
+        .comparison-card.expanded .expand-icon { transform: rotate(90deg); }
+
+        .comparison-card .desc-diff-panel {
+            display: none;
+            margin-top: 12px;
+            border-top: 1px solid #E0E0E0;
+            padding-top: 12px;
+        }
+        .comparison-card.expanded .desc-diff-panel { display: block; }
+
+        .desc-diff-panel .region-links {
+            display: flex; gap: 8px; margin-bottom: 10px;
+        }
+        .desc-diff-panel .region-link {
+            font-size: 12px; color: #007185; text-decoration: none;
+        }
+        .desc-diff-panel .region-link:hover { text-decoration: underline; }
+
+        .desc-diff-section { margin-bottom: 8px; }
+        .desc-diff-label { font-size: 11px; font-weight: 600; color: #565959; margin-bottom: 4px; }
+        .desc-diff-combined {
+            font-size: 12px; line-height: 1.6; color: #0F1111;
+            background: #FAFAFA; padding: 10px; border-radius: 4px;
+            border: 1px solid #E0E0E0;
+        }
+        .desc-diff-combined .diff-insert { background: #d4edda; color: #155724; padding: 1px 3px; border-radius: 2px; }
+        .desc-diff-combined .diff-delete { background: #f8d7da; color: #721c24; padding: 1px 3px; border-radius: 2px; text-decoration: line-through; }
+        .desc-diff-combined .diff-equal { color: #333; }
+
+        .click-hint {
+            font-size: 11px; color: #999; text-align: center;
+            margin-top: 10px; font-style: italic;
+        }
+
+        /* Region URL Bar */
+        .region-url-bar {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+        }
+        .region-url-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 5px 10px; border: 1px solid #D5D9D9; border-radius: 6px;
+            background: #fff; font-size: 12px; color: #0F1111;
+            text-decoration: none; transition: all 0.15s; cursor: pointer;
+        }
+        .region-url-btn:hover { background: #F7FAFA; border-color: #007185; color: #007185; }
+        .region-url-btn .flag { font-size: 14px; }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .comparison-regions { display: flex; align-items: center; gap: 8px; }
+        .region-badge { font-weight: 700; color: #0F1111; font-size: 13px; }
+        .region-arrow { color: #565959; font-size: 14px; }
+
+        .comparison-score { font-weight: 700; font-size: 14px; }
+        .comparison-score.high { color: #007600; }
+        .comparison-score.medium { color: #C45500; }
+        .comparison-score.low { color: #B12704; }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .metric-item { text-align: center; }
+        .metric-bar-container {
+            height: 6px;
+            background: #e7e7e7;
+            border-radius: 3px;
+            margin-bottom: 4px;
+        }
+
+        .metric-bar { height: 100%; border-radius: 3px; background: #007185; }
+        .metric-label { font-size: 11px; color: #565959; }
+        .metric-value { font-size: 13px; font-weight: 700; color: #0F1111; }
+
+        /* Quick Tests */
+        .quick-tests {
+            background: #fff;
+            border: 1px solid #D5D9D9;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .quick-tests h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #0F1111; }
+        .quick-tests p { color: #565959; font-size: 14px; margin-bottom: 16px; }
+
+        .test-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+
+        .test-btn {
+            padding: 8px 16px;
+            border: 1px solid #D5D9D9;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            color: #0F1111;
+            box-shadow: 0 2px 5px rgba(213,217,217,.5);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .test-btn:hover { background: #F7FAFA; border-color: #D5D9D9; transform: none; }
+        .test-btn .asin-code { color: #565959; font-size: 11px; font-family: monospace; }
+
+        /* Product Preview */
+        .product-preview {
+            background: #fff;
+            border: 1px solid #D5D9D9;
+            border-radius: 8px;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 24px;
+        }
+
+        .product-image {
+            width: 150px; height: 150px;
+            background: #F7FAFA;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 60px;
+            border: 1px solid #D5D9D9;
+            border-radius: 4px;
+        }
+
+        .product-info h2 {
+            font-size: 20px;
+            font-weight: 400;
+            line-height: 1.3;
+            color: #0F1111;
+            margin-bottom: 8px;
+        }
+
+        .product-meta { margin-bottom: 12px; font-size: 14px; color: #565959; display: flex; gap: 16px; }
+        .product-meta strong { color: #0F1111; }
+
+        .asin-display {
+            font-size: 14px;
+            color: #565959;
+            display: flex; align-items: center; gap: 8px;
+            background: #F0F2F2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+        .asin-display .value { font-weight: 700; color: #0F1111; font-family: monospace; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #565959;
+            font-size: 12px;
+            border-top: 1px solid #D5D9D9;
+            background: #fff;
+            margin-top: 40px;
+        }
+        .footer a { color: #007185; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; color: #C7511F; }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #e77600;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error State */
+        .error-card {
+            background: #fff;
+            border: 1px solid #B12704;
+            border-radius: 4px;
+            padding: 16px;
+            border-left: 10px solid #B12704;
+        }
+        .error-card h3 { color: #B12704; margin-bottom: 8px; font-size: 16px; }
+        .error-card p { color: #0F1111; font-size: 14px; }
+        .error-card code { background: #F0F2F2; padding: 2px 4px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; gap: 10px; }
+            .search-box { flex-direction: column; }
+            .info-grid { grid-template-columns: repeat(2, 1fr); }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .product-preview { grid-template-columns: 1fr; }
+            .product-image { width: 100%; height: 150px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🌍</div>
+                <div class="logo-text">Region<span>Check</span></div>
+            </div>
+            <div class="header-badge">Multi-Region Consistency Checker v2.0</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Amazon Product Consistency Analyzer</h1>
+            <p>Verify product description consistency across multiple Amazon regions (US, IN, DE, UK, JP, FR, CA, AU, ES) with advanced multi-metric similarity analysis.</p>
+        </section>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <h2>🔍 Check Any ASIN</h2>
+            <p>Enter an Amazon Standard Identification Number to analyze description consistency across regions.</p>
+            <div class="search-box">
+                <input type="text" class="search-input" id="manual-asin-input" placeholder="Enter ASIN (e.g., B08N5WRWNW)" maxlength="10" pattern="[A-Za-z0-9]{10}">
+                <button class="search-btn" id="search-btn" onclick="searchASIN()">
+                    <span>🔎</span> Analyze
+                </button>
+            </div>
+            <p class="search-hint">
+                💡 Example ASINs: <code>B08N5WRWNW</code> (Low Risk) • <code>B00TEST123</code> (Medium Risk) • <code>B00DIFFER1</code> (High Risk)
+            </p>
+            
+            <div class="result-display" id="result-display">
+                <!-- Results will be inserted here -->
+            </div>
+        </section>
+
+        <!-- Quick Test Buttons -->
+        <section class="quick-tests">
+            <h3>⚡ Quick Test Presets</h3>
+            <p>Click a button below to test different risk scenarios with pre-configured ASINs.</p>
+            <div class="test-buttons">
+                <button class="test-btn low" onclick="changeASIN('B08N5WRWNW', 'LOW')">
+                    <span>✓</span> Low Risk
+                    <span class="asin-code">B08N5WRWNW</span>
+                </button>
+                <button class="test-btn low" onclick="changeASIN('B09XYZ1234', 'LOW')">
+                    <span>✓</span> Low Risk
+                    <span class="asin-code">B09XYZ1234</span>
+                </button>
+                <button class="test-btn medium" onclick="changeASIN('B00TEST123', 'MEDIUM')">
+                    <span>⚠</span> Medium Risk
+                    <span class="asin-code">B00TEST123</span>
+                </button>
+                <button class="test-btn medium" onclick="changeASIN('B07MEDIUM1', 'MEDIUM')">
+                    <span>⚠</span> Medium Risk
+                    <span class="asin-code">B07MEDIUM1</span>
+                </button>
+                <button class="test-btn high" onclick="changeASIN('B00DIFFER1', 'HIGH')">
+                    <span>✗</span> High Risk
+                    <span class="asin-code">B00DIFFER1</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Product Preview -->
+        <section class="product-preview">
+            <div class="product-image" id="product-emoji">🎧</div>
+            <div class="product-info">
+                <h2 id="product-title">Sony WH-1000XM4 Wireless Premium Noise Canceling Overhead Headphones</h2>
+                <div class="product-meta">
+                    <span class="product-meta-item"><strong>Brand:</strong> Sony</span>
+                    <span class="product-meta-item"><strong>Model:</strong> WH-1000XM4</span>
+                    <span class="product-meta-item"><strong>Rating:</strong> ★★★★★ (45,678)</span>
+                </div>
+                <div class="asin-display">
+                    <span class="label">ASIN</span>
+                    <span class="value" id="asin-value">B08N5WRWNW</span>
+                </div>
+                <p id="asin-detail" style="display:none;">B08N5WRWNW</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Multi-Region Description Consistency Checker • Built with FastAPI + Chrome Extension</p>
+        <p style="margin-top: 8px;">Uses TF-IDF, Jaccard, Sequence Matching & Feature Extraction across 9 regions for <a href="#">accurate detection</a></p>
+    </footer>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        // Search ASIN manually
+        async function searchASIN() {
+            const input = document.getElementById('manual-asin-input');
+            const resultDisplay = document.getElementById('result-display');
+            const searchBtn = document.getElementById('search-btn');
+            
+            let asin = input.value.trim().toUpperCase();
+            
+            // Validate ASIN
+            if (!asin || asin.length !== 10 || !/^[A-Z0-9]{10}$/.test(asin)) {
+                alert('Please enter a valid 10-character ASIN (letters and numbers only)');
+                input.focus();
+                return;
+            }
+            
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<span class="spinner"></span> Analyzing...';
+            resultDisplay.className = 'result-display show';
+            resultDisplay.innerHTML = `
+                <div class="loading-message">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 16px;">Analyzing descriptions across regions...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_URL}/check?asin=${asin}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                displayResult(data);
+                
+                // Update the product preview with the new ASIN
+                updateProductPreview(asin);
+                
+                // Notify extension to update badge
+                window.postMessage({ type: 'MRCC_SEARCH_ASIN', asin: asin }, '*');
+                
+            } catch (error) {
+                resultDisplay.className = 'result-display show';
+                resultDisplay.innerHTML = `
+                    <div class="error-card">
+                        <h3>⚠️ Connection Error</h3>
+                        <p>Failed to fetch data: <code>${error.message}</code></p>
+                        <p>Make sure the backend server is running at <code>http://localhost:5000</code></p>
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = '<span>🔎</span> Analyze';
+            }
+        }
+        
+        // Get risk description
+        function getRiskDescription(risk) {
+            const descriptions = {
+                'LOW': 'Descriptions are highly consistent across regions',
+                'MEDIUM': 'Some variations detected, review recommended',
+                'HIGH': 'Significant discrepancies found, immediate review needed'
+            };
+            return descriptions[risk] || 'Analysis complete';
+        }
+        
+        // Display the result
+        function displayResult(data) {
+            console.log("Received data:", data); // Debugging
+
+            const resultDisplay = document.getElementById('result-display');
+            const riskClass = data.risk_level.toLowerCase();
+            const riskIcons = { 'low': '✓', 'medium': '⚠', 'high': '✗' };
+            const avgPercent = (data.average_similarity * 100).toFixed(1);
+            
+            // Handle missing min/max scores (fallback to average if missing)
+            const minScore = data.min_similarity !== undefined ? (data.min_similarity * 100).toFixed(1) : avgPercent;
+            const maxScore = data.max_similarity !== undefined ? (data.max_similarity * 100).toFixed(1) : avgPercent;
+
+            // Region flags
+            const REGION_FLAGS = { US: '\ud83c\uddfa\ud83c\uddf8', IN: '\ud83c\uddee\ud83c\uddf3', DE: '\ud83c\udde9\ud83c\uddea', UK: '\ud83c\uddec\ud83c\udde7', JP: '\ud83c\uddef\ud83c\uddf5', FR: '\ud83c\uddeb\ud83c\uddf7', CA: '\ud83c\udde8\ud83c\udde6', AU: '\ud83c\udde6\ud83c\uddfa', ES: '\ud83c\uddea\ud83c\uddf8' };
+
+            // Build comparisons HTML
+            const comparisonsHTML = data.comparisons.map((comp, idx) => {
+                const scorePercent = (comp.similarity_score * 100).toFixed(1);
+                let scoreClass = 'low';
+                if (comp.similarity_score >= 0.75) scoreClass = 'high';
+                else if (comp.similarity_score >= 0.45) scoreClass = 'medium';
+                
+                const tfidf = comp.tfidf_score !== undefined ? (comp.tfidf_score * 100).toFixed(0) : 0;
+                const jaccard = comp.jaccard_score !== undefined ? (comp.jaccard_score * 100).toFixed(0) : 0;
+                const sequence = comp.sequence_score !== undefined ? (comp.sequence_score * 100).toFixed(0) : 0;
+                const features = comp.feature_overlap !== undefined ? (comp.feature_overlap * 100).toFixed(0) : 0;
+
+                // Build diff HTML for expandable panel
+                let descDiffHTML = '';
+                if (comp.description_diff && comp.description_diff.length > 0) {
+                    const diffSpans = comp.description_diff.map(part => {
+                        if (part.type === 'equal') return `<span class="diff-equal">${part.text}</span>`;
+                        if (part.type === 'insert') return `<span class="diff-insert">${part.text}</span>`;
+                        if (part.type === 'delete') return `<span class="diff-delete">${part.text}</span>`;
+                        return '';
+                    }).join(' ');
+                    descDiffHTML = `
+                        <div class="desc-diff-section">
+                            <div class="desc-diff-label">Description Difference (${comp.region_1} → ${comp.region_2})</div>
+                            <div class="desc-diff-combined">${diffSpans}</div>
+                        </div>
+                    `;
+                }
+
+                // Region links
+                let regionLinksHTML = '';
+                if (comp.url_1 || comp.url_2) {
+                    regionLinksHTML = `<div class="region-links">`;
+                    if (comp.url_1) regionLinksHTML += `<a class="region-link" href="${comp.url_1}" target="_blank">${REGION_FLAGS[comp.region_1] || ''} View on ${comp.region_1} →</a>`;
+                    if (comp.url_2) regionLinksHTML += `<a class="region-link" href="${comp.url_2}" target="_blank">${REGION_FLAGS[comp.region_2] || ''} View on ${comp.region_2} →</a>`;
+                    regionLinksHTML += `</div>`;
+                }
+                
+                return `
+                    <div class="comparison-card" data-comp-idx="${idx}">
+                        <div class="comparison-header">
+                            <div class="comparison-regions">
+                                <span class="expand-icon">▶</span>
+                                <span class="region-badge">${comp.region_1}</span>
+                                <span class="region-arrow">↔</span>
+                                <span class="region-badge">${comp.region_2}</span>
+                            </div>
+                            <div class="comparison-score ${scoreClass}">${scorePercent}% Match</div>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-bar-container">
+                                    <div class="metric-bar tfidf" style="width: ${tfidf}%"></div>
+                                </div>
+                                <div class="metric-value">${tfidf}%</div>
+                                <div class="metric-label">Keywords</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-bar-container">
+                                    <div class="metric-bar jaccard" style="width: ${jaccard}%"></div>
+                                </div>
+                                <div class="metric-value">${jaccard}%</div>
+                                <div class="metric-label">Content</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-bar-container">
+                                    <div class="metric-bar sequence" style="width: ${sequence}%"></div>
+                                </div>
+                                <div class="metric-value">${sequence}%</div>
+                                <div class="metric-label">Structure</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-bar-container">
+                                    <div class="metric-bar features" style="width: ${features}%"></div>
+                                </div>
+                                <div class="metric-value">${features}%</div>
+                                <div class="metric-label">Specs</div>
+                            </div>
+                        </div>
+                        <div class="desc-diff-panel">
+                            ${regionLinksHTML}
+                            ${descDiffHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Build Title Analysis HTML
+            let titleAnalysisHTML = '';
+            if (data.title_analysis) {
+                if (data.title_analysis.mismatches && data.title_analysis.mismatches.length > 0) {
+                    // Mismatches detected
+                    const mismatchItems = data.title_analysis.mismatches.map(m => {
+                        const score = (m.similarity * 100).toFixed(0);
+                        
+                        // Generate diff HTML if available
+                        let diffHTML = '';
+                        if (m.diff) {
+                            const diffSpans = m.diff.map(part => {
+                                if (part.type === 'equal') return `<span>${part.text}</span>`;
+                                if (part.type === 'insert') return `<span class="diff-insert" title="Added in ${m.region_2}">${part.text}</span>`;
+                                if (part.type === 'delete') return `<span class="diff-delete" title="Removed from ${m.region_1}">${part.text}</span>`;
+                                return '';
+                            }).join(' ');
+                            
+                            diffHTML = `
+                                <div class="diff-content">
+                                    <div class="diff-label">Difference Analysis (${m.region_1} → ${m.region_2})</div>
+                                    <div class="diff-text">${diffSpans}</div>
+                                </div>
+                            `;
+                        }
+
+                        return `
+                            <div class="mismatch-item">
+                                <div class="mismatch-header">
+                                    <span class="region-badge">${m.region_1}</span>
+                                    <span class="region-arrow">↔</span>
+                                    <span class="region-badge">${m.region_2}</span>
+                                    <span class="mismatch-score">${score}% Match</span>
+                                </div>
+                                <div class="mismatch-titles">
+                                    <div class="mismatch-title-row">
+                                        <span class="region-label">${m.region_1}:</span>
+                                        <span class="title-text">${m.title_1}</span>
+                                    </div>
+                                    <div class="mismatch-title-row">
+                                        <span class="region-label">${m.region_2}:</span>
+                                        <span class="title-text">${m.title_2}</span>
+                                    </div>
+                                </div>
+                                ${diffHTML}
+                            </div>
+                        `;
+                    }).join('');
+
+                    titleAnalysisHTML = `
+                        <div class="title-mismatch-section">
+                            <div class="mismatch-alert-header">
+                                <span class="alert-icon">⚠️</span>
+                                <h4>Title Inconsistencies Detected</h4>
+                            </div>
+                            <div class="mismatch-list">
+                                ${mismatchItems}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // No mismatches - Show success state
+                    titleAnalysisHTML = `
+                        <div class="title-mismatch-section" style="border-color: #007600;">
+                            <div class="mismatch-alert-header" style="background-color: #f0f8f0; border-bottom-color: #007600;">
+                                <span class="alert-icon">✓</span>
+                                <h4 style="color: #007600;">Product Titles are Consistent</h4>
+                            </div>
+                            <div class="mismatch-list" style="padding: 12px 16px; font-size: 13px; color: #565959;">
+                                Titles match across all analyzed regions (${data.regions_analyzed.join(', ')}).
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                console.warn("Title analysis data missing from response.");
+                titleAnalysisHTML = `
+                    <div class="title-mismatch-section" style="border-color: #ffa500;">
+                        <div class="mismatch-alert-header" style="background-color: #fff3cd; border-bottom-color: #ffa500;">
+                            <span class="alert-icon">⚠️</span>
+                            <h4 style="color: #856404;">Backend Update Required</h4>
+                        </div>
+                        <div class="mismatch-list" style="padding: 12px 16px; font-size: 13px; color: #856404;">
+                            Title analysis data is missing. Please restart your backend server to see title comparisons.
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Build confidence badge
+            const confidenceBadgeClass = data.confidence ? data.confidence.toLowerCase() : 'medium';
+            const confidenceHTML = data.confidence ? 
+                `<span class="confidence-badge ${confidenceBadgeClass}">${data.confidence} CONFIDENCE</span>` : '';
+
+            // Build region URL bar
+            let regionUrlBarHTML = '';
+            if (data.region_urls) {
+                const regionBtns = Object.entries(data.region_urls).map(([region, url]) => {
+                    const flag = REGION_FLAGS[region] || '\ud83c\udf10';
+                    return `<a class="region-url-btn" href="${url}" target="_blank" rel="noopener"><span class="flag">${flag}</span> ${region}</a>`;
+                }).join('');
+                regionUrlBarHTML = `
+                    <div class="comparisons-section">
+                        <h4>View Product on Amazon</h4>
+                        <div class="region-url-bar">${regionBtns}</div>
+                    </div>
+                `;
+            }
+
+            resultDisplay.className = 'result-display show';
+            resultDisplay.innerHTML = `
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-title">📊 Analysis Results</span>
+                        ${confidenceHTML}
+                    </div>
+                    
+                    <!-- Risk Banner -->
+                    <div class="risk-banner ${riskClass}">
+                        <div class="risk-banner-left">
+                            <div class="risk-icon">${riskIcons[riskClass]}</div>
+                            <div class="risk-info">
+                                <h3>${data.risk_level} RISK</h3>
+                                <p>${getRiskDescription(data.risk_level)}</p>
+                            </div>
+                        </div>
+                        <div class="risk-score">
+                            <div class="risk-score-value">${avgPercent}%</div>
+                            <div class="risk-score-label">Avg Similarity</div>
+                        </div>
+                    </div>
+                    
+                    ${titleAnalysisHTML}
+
+                    <!-- Info Grid -->
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-card-label">ASIN</div>
+                            <div class="info-card-value mono">${data.asin}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Min Score</div>
+                            <div class="info-card-value">${minScore}%</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Max Score</div>
+                            <div class="info-card-value">${maxScore}%</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-label">Regions</div>
+                            <div class="info-card-value">${data.regions_analyzed.length}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comparisons -->
+                    <div class="comparisons-section">
+                        <h4>Region Comparisons</h4>
+                        <div class="click-hint">Click any comparison to expand description diff</div>
+                        ${comparisonsHTML}
+                    </div>
+
+                    <!-- Region URLs -->
+                    ${regionUrlBarHTML}
+                </div>
+            `;
+
+            // Wire up expand/collapse on comparison cards
+            resultDisplay.querySelectorAll('.comparison-card[data-comp-idx]').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('a')) return;
+                    this.classList.toggle('expanded');
+                });
+            });
+        }
+        
+        // Allow Enter key to trigger search
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('manual-asin-input');
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchASIN();
+                }
+            });
+            
+            // Auto-uppercase input
+            input.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        });
+
+        // Function to change ASIN and reload page
+        // Product metadata for each known ASIN
+        const PRODUCT_INFO = {
+            'B08N5WRWNW': { title: 'Sony WH-1000XM4 Wireless Premium Noise Canceling Overhead Headphones', emoji: '🎧', brand: 'Sony', model: 'WH-1000XM4', rating: '★★★★★ (45,678)' },
+            'B00TEST123': { title: 'Premium Wireless Bluetooth Earbuds with Active Noise Cancellation', emoji: '🎵', brand: 'Generic', model: 'BT-ANC-100', rating: '★★★★☆ (12,345)' },
+            'B00DIFFER1': { title: 'Ultra-Slim Laptop Stand made from Premium Aluminum Alloy', emoji: '💻', brand: 'TechRise', model: 'LS-200', rating: '★★★☆☆ (8,901)' },
+            'B09XYZ1234': { title: 'Stainless Steel Insulated Water Bottle - 32oz', emoji: '🥤', brand: 'HydroFlask', model: 'WB-32', rating: '★★★★★ (23,456)' },
+            'B07MEDIUM1': { title: 'Smart Fitness Tracker Watch with Heart Rate Monitor', emoji: '⌚', brand: 'FitBand', model: 'FT-500', rating: '★★★★☆ (15,678)' }
+        };
+
+        function updateProductPreview(asin) {
+            const info = PRODUCT_INFO[asin];
+            if (info) {
+                document.getElementById('product-title').textContent = info.title;
+                document.getElementById('product-emoji').textContent = info.emoji;
+                // Update meta fields
+                const metaItems = document.querySelectorAll('.product-meta-item');
+                if (metaItems.length >= 1) metaItems[0].innerHTML = `<strong>Brand:</strong> ${info.brand}`;
+                if (metaItems.length >= 2) metaItems[1].innerHTML = `<strong>Model:</strong> ${info.model}`;
+                if (metaItems.length >= 3) metaItems[2].innerHTML = `<strong>Rating:</strong> ${info.rating}`;
+            } else {
+                document.getElementById('product-title').textContent = `Product ${asin}`;
+                document.getElementById('product-emoji').textContent = '📦';
+                const metaItems = document.querySelectorAll('.product-meta-item');
+                if (metaItems.length >= 1) metaItems[0].innerHTML = `<strong>Brand:</strong> Unknown`;
+                if (metaItems.length >= 2) metaItems[1].innerHTML = `<strong>Model:</strong> ${asin}`;
+                if (metaItems.length >= 3) metaItems[2].innerHTML = `<strong>Rating:</strong> —`;
+            }
+            document.getElementById('asin-value').textContent = asin;
+            document.getElementById('asin-detail').textContent = asin;
+        }
+
+        function changeASIN(asin, expectedRisk) {
+            // Update URL with new ASIN parameter
+            const url = new URL(window.location.href);
+            url.searchParams.set('asin', asin);
+            history.replaceState(null, '', url);
+            
+            // Store the ASIN in sessionStorage so we can update the page after reload
+            sessionStorage.setItem('selectedASIN', asin);
+            sessionStorage.setItem('expectedRisk', expectedRisk);
+            
+            // Update product preview immediately
+            updateProductPreview(asin);
+            
+            // Search for the new ASIN
+            document.getElementById('manual-asin-input').value = asin;
+            searchASIN();
+        }
+
+        // On page load, check if we have a stored ASIN
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const asinParam = urlParams.get('asin');
+            
+            if (asinParam) {
+                // Update product preview and ASIN displays
+                updateProductPreview(asinParam);
+                document.getElementById('manual-asin-input').value = asinParam;
+                
+                // Auto-search if ASIN in URL
+                setTimeout(() => searchASIN(), 500);
+            }
+        });
+    </script>
+</body>
+</html>
